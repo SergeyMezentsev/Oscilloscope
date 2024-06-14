@@ -2,6 +2,7 @@
 #include "st7735.h"
 #include "gfx.h"
 #include "markers.h"
+#include "trigger.h"
 #include "IRQ_Handlers.h"
 
 
@@ -18,6 +19,9 @@ void createBottomMarkerArray() {
     voltScales = (uint16_t*)malloc(VOLT_SCALE_NUM * sizeof(uint16_t));
     secondScales = (uint16_t*)malloc(SEC_SCALE_NUM * sizeof(uint16_t));
     attScales = (uint16_t*)malloc(ATT_SCALE_NUM * sizeof(uint16_t));
+
+    // create trigger
+    createTrigger();
 }
 
 void setDefaultBottomMarkers() {
@@ -88,22 +92,35 @@ void setDefaultBottomMarkers() {
     (bottomMarkers + ATT_MARKER)->scaleBuf = attScales;
     (bottomMarkers + ATT_MARKER)->scalePos = 0U;
     (bottomMarkers + ATT_MARKER)->measure = ATT_MEASURE;
+
+    // set default to trigger
+    setDefaultTrigger();
 }
 
 static void highlightCertainBottomMarker(uint8_t index) {
-    setCursor(3 + index * 33, 101);
-    fillRect(3 + index * 33, 101, 21, 9, ST7735_BLUE);
-    setTextColor(ST7735_WHITE, ST7735_BLUE);
-    setCursor(5 + index * 33, 103);
-    printString((bottomMarkers + index)->title);
+
+    if (index == 3U) {  // If we have index of the trigger
+        highlightTrigger();
+    } else {
+        setCursor(3 + index * 33, 101);
+        fillRect(3 + index * 33, 101, 21, 9, ST7735_BLUE);
+        setTextColor(ST7735_WHITE, ST7735_BLUE);
+        setCursor(5 + index * 33, 103);
+        printString((bottomMarkers + index)->title);
+    }
 }
 
 static void DeHighlightCertainBottomMarker(uint8_t index) {
-    setCursor(3 + index * 33, 101);
-    fillRect(3 + index * 33, 101, 21, 9, ST7735_BLACK);
-    setTextColor(ST7735_WHITE, ST7735_BLACK);
-    setCursor(5 + index * 33, 103);
-    printString((bottomMarkers + index)->title);
+
+    if (index == 3U) {  // If we have index of the trigger
+        dehighlightTrigger();
+    } else {
+        setCursor(3 + index * 33, 101);
+        fillRect(3 + index * 33, 101, 21, 9, ST7735_BLACK);
+        setTextColor(ST7735_WHITE, ST7735_BLACK);
+        setCursor(5 + index * 33, 103);
+        printString((bottomMarkers + index)->title);
+    }
 }
 
 void updateRunningMarker() {
@@ -259,9 +276,12 @@ void updateBottomMarkers() {
 
         if (scaleIsHighlighted == 1U) { // If scale fo some marker was highlighted --> dehighlight it
 
-            DeHighlightCertainScale(highlightedBottomMarker);
+            if (highlightedBottomMarker == 3) {
+                unchooseTrigger();
+            } else {
+                DeHighlightCertainScale(highlightedBottomMarker);
+            }
             scaleIsHighlighted = 0U;
-
             encoderChangedPosition = 0U;    // In order to prevent changing highlighted marker
                                             // right after setting the scale
         }
@@ -271,11 +291,11 @@ void updateBottomMarkers() {
             if (encoderDir > 0) {     // If encoder has worked and dir > 0
 
                 ++highlightedBottomMarker;
-                if (highlightedBottomMarker > 2) {
+                if (highlightedBottomMarker > 3) {
                     highlightedBottomMarker = 0;
-                    DeHighlightCertainBottomMarker(2U);
+                    DeHighlightCertainBottomMarker(3);
                 } else {
-                    DeHighlightCertainBottomMarker(highlightedBottomMarker - 1U);
+                    DeHighlightCertainBottomMarker(highlightedBottomMarker - 1);
                 }
                 highlightCertainBottomMarker(highlightedBottomMarker);
 
@@ -283,7 +303,7 @@ void updateBottomMarkers() {
 
                 --highlightedBottomMarker;
                 if (highlightedBottomMarker < 0) {
-                    highlightedBottomMarker = 2;
+                    highlightedBottomMarker = 3;
                     DeHighlightCertainBottomMarker(0U);
                 } else {
                     DeHighlightCertainBottomMarker(highlightedBottomMarker + 1);
@@ -298,7 +318,11 @@ void updateBottomMarkers() {
         
         if (scaleIsHighlighted == 0U) { // If scale fo some marker was highlighted --> dehighlight it
 
-            highlightCertainScale(highlightedBottomMarker);
+            if (highlightedBottomMarker == 3) {
+                chooseTrigger();
+            } else {
+                highlightCertainScale(highlightedBottomMarker);
+            }
             scaleIsHighlighted = 1U;
         }
 
@@ -306,21 +330,30 @@ void updateBottomMarkers() {
         
             if (encoderDir > 0) {     // If encoder has worked and dir > 0
 
-                increaseScalePos(highlightedBottomMarker);
-                updateMeasure(highlightedBottomMarker);
-                updateScale(highlightedBottomMarker);
-                updateTitle(highlightedBottomMarker);
+                if (highlightedBottomMarker == 3) {
+                    moveUpTrigger();
+                } else {
+                    increaseScalePos(highlightedBottomMarker);
+                    updateMeasure(highlightedBottomMarker);
+                    updateScale(highlightedBottomMarker);
+                    updateTitle(highlightedBottomMarker);
+                    highlightCertainScale(highlightedBottomMarker);
+                }
 
             } else if (encoderDir < 0) {     // If encoder has worked and dir < 0
 
-                decreaseScalePos(highlightedBottomMarker);
-                updateMeasure(highlightedBottomMarker);
-                updateScale(highlightedBottomMarker);
-                updateTitle(highlightedBottomMarker);
+                if (highlightedBottomMarker == 3) {
+                    moveDownTrigger();
+                } else {
+                    decreaseScalePos(highlightedBottomMarker);
+                    updateMeasure(highlightedBottomMarker);
+                    updateScale(highlightedBottomMarker);
+                    updateTitle(highlightedBottomMarker);
+                    highlightCertainScale(highlightedBottomMarker);
+                }
                 
             }
-
-            highlightCertainScale(highlightedBottomMarker);
+            
             encoderChangedPosition = 0U;
         }
     }
@@ -346,6 +379,9 @@ void drawBottomMarkers() {
 	setTextColor(ST7735_BLACK, ST7735_GREEN);
 	setCursor(102, 108);
     printString("RUN");
+
+    // draw the trigger
+    drawTrigger();
 }
 
 
