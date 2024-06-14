@@ -26,7 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-//#include "IRQ_Handlers.h"
+#include "IRQ_Handlers.h"
 
 /* USER CODE END Includes */
 
@@ -98,6 +98,7 @@ int main(void)
   MX_TIM1_Init();
   MX_USART6_UART_Init();
   MX_TIM10_Init();
+  MX_TIM9_Init();
   /* USER CODE BEGIN 2 */
 	
 	
@@ -127,6 +128,7 @@ int main(void)
   
 	HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_1);
 	HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_1);
+  HAL_TIM_Base_Start_IT(&htim9);
 
   scopeInit();
 
@@ -172,12 +174,25 @@ int main(void)
 		// //flushDisplay();
 		// HAL_Delay(200);
 		
+
+
+
+
+
+
 		
 		
+    //scopeLoop();
+    if (updateScreenShot == 1U) {
+      HAL_UART_Transmit(&huart6, str1, 8, 30);
+      updateScreenShot = 0U;
+    }
 		
-    scopeLoop();
-		
-		
+
+
+
+
+
 
     // if (menuButtonPushed == 1U) {
 		//   HAL_UART_Transmit(&huart6, str1, 8, 30);		  

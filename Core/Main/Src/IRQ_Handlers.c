@@ -14,6 +14,8 @@ volatile uint8_t stopButtonPushed = 0U;
 static volatile uint8_t currentEXTI = 0U;
 static volatile uint16_t currentPin = 0U;
 
+volatile uint8_t updateScreenShot = 0U;
+
 
 
 // This is the handler for the encoder
@@ -78,6 +80,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         NVIC_ClearPendingIRQ(currentEXTI); 		// clear bit NVIC_ICPRx (queue bit)
         HAL_NVIC_EnableIRQ(currentEXTI);   		// turn on external interrupt
 
+	} else if (htim->Instance == TIM9) {
+		updateScreenShot = 1U;
 	}
 }
 

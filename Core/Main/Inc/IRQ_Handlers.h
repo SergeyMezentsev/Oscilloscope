@@ -7,5 +7,7 @@ extern volatile uint8_t encoderButtonPushed;
 extern volatile uint8_t menuButtonPushed;
 extern volatile uint8_t stopButtonPushed;
 
+extern volatile uint8_t updateScreenShot;
+
 
 #endif  // IRQ_HANDLERS_H
