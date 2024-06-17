@@ -27,8 +27,8 @@ void createSideMarkerArray();
 void setDefaultSideMarkers();
 void drawSideMarkers();
 
-void setMeasure (uint8_t marker, uint8_t measure);
-void setMeaning (uint8_t marker, uint16_t meaning);
+// void setMeasure (uint8_t marker, uint8_t measure);
+// void setMeaning (uint8_t marker, uint16_t meaning);
 void updateSideMarkers();
 
 

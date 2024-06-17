@@ -26,7 +26,11 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-#include "IRQ_Handlers.h"
+//#include "IRQ_Handlers.h"
+#include <stdio.h>
+#include <string.h>
+#include "graphic.h"
+// #include "ADC.h"
 
 /* USER CODE END Includes */
 
@@ -136,11 +140,23 @@ int main(void)
 
 	//----------------------------------------------------------------------------------------------------------------------------------------------------------
 	
-	
+	uint8_t str[10];
 	uint8_t str1[] = "Pushed\r\n\0";
   uint8_t str2[] = "Released\r\n\0";
 	
 	
+	//createADCArray();
+  //createPointArrays();
+  //getNewADCMeasures();
+  
+  //updateScales();
+
+  // uint16_t len = 200;
+  // uint16_t* mas  = (uint16_t*)malloc(len * sizeof(uint16_t));
+  
+	// for (uint16_t i = 0U; i < len; ++i) {
+  //   mas[i] = i;
+  // }
 	
 	
 	
@@ -182,11 +198,43 @@ int main(void)
 
 		
 		
-    //scopeLoop();
-    if (updateScreenShot == 1U) {
-      HAL_UART_Transmit(&huart6, str1, 8, 30);
-      updateScreenShot = 0U;
-    }
+    scopeLoop();
+
+    sprintf((char*)str, "%d\n\r", pixelScaleMV);
+    HAL_UART_Transmit(&huart6, str, strlen((char*)str), 30);
+    // if (updateScreenShot == 1U) {
+    //   HAL_UART_Transmit(&huart6, str1, 8, 30);
+    //   updateScreenShot = 0U;
+    // }
+    
+    // if (measures != NULL) {
+    //   for (uint16_t i = 0U; i < LENGTH; ++i) {
+    //     sprintf((char*)str, "%d\n\r", measures[i]);
+    //     //sprintf((char*)str, "---\n\r");
+    //     HAL_UART_Transmit(&huart6, str, strlen((char*)str), 30);
+    //     HAL_Delay(100);
+    //   }
+    // } else {
+    //   HAL_UART_Transmit(&huart6, str1, strlen((char*)str1), 30);
+    //   HAL_Delay(100);
+    // }
+		
+    
+    // sprintf((char*)str, "%d\n\r", trigLevelMV);
+		// HAL_UART_Transmit(&huart6, str, strlen(str), 30);
+    // HAL_Delay(10);
+    
+
+
+
+
+
+
+
+
+
+
+
 		
 
 

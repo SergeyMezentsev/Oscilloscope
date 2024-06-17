@@ -14,6 +14,9 @@ void scopeInit() {
 	initDisplay(&hspi1);
 	createBottomMarkers();
 	createSideMarkers();
+
+	createADC();
+	createGraphic();
 	
 
 	
@@ -227,6 +230,14 @@ void scopeLoop() {
 
 
 		if (stopButtonPushed == 0U) {	// Scope is running
+
+			if (updateScreenShot == 1U) {	// if new screenshot needed
+
+				handleADC();
+				handleGraphic();
+				handleSideMarkers();
+				updateScreenShot = 0U;
+			}
 
 			handleBottomMarkers();
 			

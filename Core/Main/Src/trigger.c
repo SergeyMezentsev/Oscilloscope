@@ -14,7 +14,8 @@ void createTrigger() {
 void setDefaultTrigger() {
     trigger->pos = 50U;
     //trigger->meaning = (uint16_t)( (1.0f - ((float)(trigger->pos) - 3.0f) / 95.0f) * 4095.0f );
-    trigger->meaning = (uint16_t)( 4095U - (trigger->pos - 3U) * 43U );
+    //trigger->meaning = (uint16_t)( 4095U - (trigger->pos - 3U) * 43U );
+    trigger->meaning = (uint16_t)(98U - trigger->pos);
 }
 
 void drawTrigger() {
@@ -56,7 +57,8 @@ void moveUpTrigger() {
         hideTrigger();
         trigger->pos--;
         //trigger->meaning = (uint16_t)( (1.0f - ((float)(trigger->pos) - 3.0f) / 95.0f) * 4095.0f );
-        trigger->meaning = (uint16_t)( 4095U - (trigger->pos - 3U) * 43U );
+        //trigger->meaning = (uint16_t)( 4095U - (trigger->pos - 3U) * 43U );
+        trigger->meaning = (uint16_t)(98U - trigger->pos);
         chooseTrigger();
     }
 }
@@ -67,7 +69,8 @@ void moveDownTrigger() {
         hideTrigger();
         trigger->pos++;
         //trigger->meaning = (uint16_t)( (1.0f - ((float)(trigger->pos) - 3.0f) / 95.0f) * 4095.0f );
-        trigger->meaning = (uint16_t)( 4095U - (trigger->pos - 3U) * 43U );
+        //trigger->meaning = (uint16_t)( 4095U - (trigger->pos - 3U) * 43U );
+        trigger->meaning = (uint16_t)(98U - trigger->pos);
         chooseTrigger();
     }
 }

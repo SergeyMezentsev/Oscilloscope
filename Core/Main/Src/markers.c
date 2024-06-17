@@ -6,7 +6,7 @@
 #include "IRQ_Handlers.h"
 
 
-static bottomMarker_t* bottomMarkers;
+bottomMarker_t* bottomMarkers = NULL;
 static int8_t highlightedBottomMarker = 0;      // Number of the currnet gighlighted bottom marker
 
 static uint16_t* voltScales = NULL;

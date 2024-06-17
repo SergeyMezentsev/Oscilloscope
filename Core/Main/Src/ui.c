@@ -5,6 +5,8 @@
 #include "markers.h"
 #include "menu.h"
 #include "sideMarkers.h"
+#include "ADC.h"
+#include "graphic.h"
 
 void initDisplay(SPI_HandleTypeDef* hspi) {
 
@@ -73,10 +75,25 @@ void createSideMarkers() {
 }
 
 void handleSideMarkers() {
-
-
-
+	updateSideMarkers();
 }
+
+void createADC() {
+	createADCArray();
+}
+
+void handleADC() {
+	getNewADCMeasures();
+}
+
+void createGraphic() {
+	createPointArrays();
+}
+
+void handleGraphic() {
+	updateGraphic();
+}
+
 
 
 

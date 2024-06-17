@@ -1,7 +1,11 @@
 #include <stdlib.h>
 #include "st7735.h"
 #include "gfx.h"
+#include "markers.h"
+#include "ADC.h"
+#include "graphic.h"
 #include "sideMarkers.h"
+
 
 static uint8_t lastOwnedPos = 0U;
 sideMarker_t* sideMarkers = NULL;
@@ -100,27 +104,59 @@ void setMeasure (uint8_t marker, uint8_t measure) {
     }
 }
 
-void setMeaning (uint8_t marker, uint16_t meaning) {
+void setMeaningMV (uint8_t marker, int16_t meaning) {
 
-    if (meaning < 10U) {
-        (sideMarkers + marker)->meaning[0] = '0' + (char)meaning;
-        (sideMarkers + marker)->meaning[1] = ' ';
-        (sideMarkers + marker)->meaning[2] = ' ';
-        (sideMarkers + marker)->meaning[3] = ' ';
-    } else if (meaning < 100U) {
-        (sideMarkers + marker)->meaning[0] = '0' + (char)(meaning / 10U);
-        (sideMarkers + marker)->meaning[1] = '0' + (char)(meaning - 10U * (meaning / 10U));
-        (sideMarkers + marker)->meaning[2] = ' ';
-        (sideMarkers + marker)->meaning[3] = ' ';
+    // from -999 to 999 mV
+
+    if (meaning > 0) {
+        (sideMarkers + marker)->meaning[0] = ' ';
     } else {
-        uint16_t hundreds = meaning / 100U;
-        uint16_t dozens = (meaning - 100U * hundreds) / 10U;
-        uint16_t units = meaning - 100U * hundreds - 10U * dozens;
-        (sideMarkers + marker)->meaning[0] = '0' + (char)hundreds;
-        (sideMarkers + marker)->meaning[1] = '0' + (char)dozens;
-        (sideMarkers + marker)->meaning[2] = '0' + (char)units;
+        (sideMarkers + marker)->meaning[0] = '-';
+        meaning = -meaning;
     }
 
+    if (meaning < 10) {
+        (sideMarkers + marker)->meaning[1] = '0' + (char)meaning;
+        (sideMarkers + marker)->meaning[2] = ' ';
+        (sideMarkers + marker)->meaning[3] = ' ';
+    } else if (meaning < 100) {
+        (sideMarkers + marker)->meaning[1] = '0' + (char)(meaning / 10);
+        (sideMarkers + marker)->meaning[2] = '0' + (char)(meaning - 10 * (meaning / 10));
+        (sideMarkers + marker)->meaning[3] = ' ';
+    } else {
+        uint16_t hundreds = meaning / 100;
+        uint16_t dozens = (meaning - 100 * hundreds) / 10;
+        uint16_t units = meaning - 100 * hundreds - 10 * dozens;
+        (sideMarkers + marker)->meaning[1] = '0' + (char)hundreds;
+        (sideMarkers + marker)->meaning[2] = '0' + (char)dozens;
+        (sideMarkers + marker)->meaning[3] = '0' + (char)units;
+    }
+
+}
+
+static void setMeaningV (uint8_t marker, int16_t meaning) {
+
+    // The functin gets from 11 to 999 (or from -999 to -11)
+    // The last digit is a tenth of a Volt
+    // First one/two digits(s) is(are) whole Volts
+
+    if (meaning > 0) {
+        (sideMarkers + marker)->meaning[0] = ' ';
+    } else {
+        (sideMarkers + marker)->meaning[0] = '-';
+        meaning = -meaning;
+    }
+
+    if (meaning < 100) {
+        (sideMarkers + marker)->meaning[1] = '0' + (char)(meaning / 10);
+        (sideMarkers + marker)->meaning[2] = '.';
+        (sideMarkers + marker)->meaning[3] = '0' + (char)(meaning - 10 * (meaning / 10));
+    } else {
+        meaning /= 10;
+        (sideMarkers + marker)->meaning[1] = '0' + (char)(meaning / 10);
+        (sideMarkers + marker)->meaning[2] = '0' + (char)(meaning - 10 * (meaning / 10));
+        (sideMarkers + marker)->meaning[3] = ' ';
+    }
 }
 
 static void showMarker(uint8_t marker, uint8_t pos) {
@@ -158,12 +194,81 @@ void drawSideMarkers() {
     }
 }
 
+static void updateMaxMinPpk() {
+
+    int32_t max = (int32_t) measures[start];
+    int32_t min = (int32_t) measures[start];
+    int32_t ppk;
+
+    for (uint16_t i = start; i <= stop; ++i) {
+        if ( ( (int32_t) measures[i] ) < min)
+            min = (int32_t) measures[i];
+        
+        if (( (int32_t) measures[i] ) > max)
+            max = (int32_t) measures[i];
+    }
+    ppk = max - min;
+
+    max *= 3300;
+    max *= (int32_t) ( (bottomMarkers + ATT_MARKER)->scaleBuf[(bottomMarkers + ATT_MARKER)->scalePos] );
+    max /= 4095;
+    if (max > -1000 && max < 1000) {
+        setMeasure(MAX_SIDE_MARKER, MV_MEASURE_SIDE_MARKER);
+        setMeaningMV(MAX_SIDE_MARKER, max);
+    } else {
+        setMeasure(MAX_SIDE_MARKER, V_MEASURE_SIDE_MARKER);
+        max /= 100;
+        setMeaningV(MAX_SIDE_MARKER, max);
+    }
+
+    min *= 3300;
+    min *= (int32_t) ( (bottomMarkers + ATT_MARKER)->scaleBuf[(bottomMarkers + ATT_MARKER)->scalePos] );
+    min /= 4095;
+    if (min > -1000 && min < 1000) {
+        setMeasure(MIN_SIDE_MARKER, MV_MEASURE_SIDE_MARKER);
+        setMeaningMV(MIN_SIDE_MARKER, min);
+    } else {
+        setMeasure(MIN_SIDE_MARKER, V_MEASURE_SIDE_MARKER);
+        min /= 100;
+        setMeaningV(MIN_SIDE_MARKER, min);
+    }
+
+    ppk *= 3300;
+    ppk *= (int32_t) ( (bottomMarkers + ATT_MARKER)->scaleBuf[(bottomMarkers + ATT_MARKER)->scalePos] );
+    ppk /= 4095;
+    if (ppk > -1000 && ppk < 1000) {
+        setMeasure(PPK_SIDE_MARKER, MV_MEASURE_SIDE_MARKER);
+        setMeaningMV(PPK_SIDE_MARKER, ppk);
+    } else {
+        setMeasure(PPK_SIDE_MARKER, V_MEASURE_SIDE_MARKER);
+        ppk /= 100;
+        setMeaningV(PPK_SIDE_MARKER, ppk);
+    }
+}
+
+static void updateTrig() {
+
+    if (trigLevelMV > -1000 && trigLevelMV < 1000) {
+        setMeasure(TRIG_SIDE_MARKER, MV_MEASURE_SIDE_MARKER);
+        setMeaningMV(TRIG_SIDE_MARKER, trigLevelMV);
+    } else {
+        setMeasure(TRIG_SIDE_MARKER, V_MEASURE_SIDE_MARKER);
+        setMeaningV(TRIG_SIDE_MARKER, trigLevelMV / 100);
+    }    
+}
+
 void updateSideMarkers() {
+
+    updateMaxMinPpk();
+    updateTrig();
+
     setTextColor(ST7735_WHITE, ST7735_BLACK);
     for (uint8_t i = 0U, pos = 0U; i < 4U; ++i) {
         if ((sideMarkers + i)->state == CHOSEN) {
             setCursor(105, 16 + 32U * pos);
             printString((sideMarkers + i)->meaning);
+            setCursor(105, 27 + 32U * pos);
+            printString((sideMarkers + i)->measure);
             pos++;
         }
     }

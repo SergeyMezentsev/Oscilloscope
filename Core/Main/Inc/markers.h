@@ -38,6 +38,7 @@ typedef struct {
 
 } bottomMarker_t;
 
+extern bottomMarker_t* bottomMarkers;
 
 void createBottomMarkerArray();
 void setDefaultBottomMarkers();

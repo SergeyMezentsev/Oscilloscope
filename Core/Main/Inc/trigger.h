@@ -3,7 +3,7 @@
 
 typedef struct {
     uint8_t pos;
-    uint16_t meaning;   // trigger level converted to [0; 4095] for ADC array
+    uint16_t meaning;   // trigger level converted to [0; 95] for pixel position in the cell area
 } trigger_t;
 
 extern trigger_t* trigger;

@@ -18,6 +18,12 @@ void handleMenu();
 void createSideMarkers();
 void handleSideMarkers();
 
+void createADC();
+void handleADC();
+
+void createGraphic();
+void handleGraphic();
+
 
     
 
